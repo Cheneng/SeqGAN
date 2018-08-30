@@ -6,3 +6,4 @@ class G_Config(object):
         self.hidden_size = 32
         self.seq_len = 20
         self.batch_first = True
+        self.batch_size = 32

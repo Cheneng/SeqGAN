@@ -14,21 +14,21 @@ class Generator(nn.Module):
         self.hidden_size = config.hidden_size
         self.output_size = config.dict_size
         self.embed = nn.Embedding(config.dict_size, config.embed_dim)
-        self.embed.weight.requires_grad = False     # not to change the embedding
+        # self.embed.weight.requires_grad = False     # not to change the embedding
         self.lstm = nn.LSTM(self.input_size, self.hidden_size,
                             batch_first=config.batch_first)
         self.linear_out = nn.Linear(self.hidden_size, self.output_size)
         self.softmax_out = nn.LogSoftmax(dim=1)
 
-    def forward(self, x):
+    def forward(self, x, hidden=None):
         """
         :param x: The input data (dim=2)
         :return: the output of the sequence.
         """
         x = self.embed(x)
-        x, hidden = self.lstm(x)
+        x, _ = self.lstm(x, hidden)
         x = self.softmax_out(x)
-        return x, hidden
+        return x
 
     def step_forward_sample(self, x, hidden=None):
         """
