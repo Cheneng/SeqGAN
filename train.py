@@ -2,9 +2,11 @@ import torch
 import torch.nn as nn
 
 
-def pre_train(model, dataloader, criterion, optimizer,
-              training_epoch=20, vis=None):
+def train(model, dataloader, criterion, optimizer,
+          training_epoch=20, vis=None):
     for epoch in range(training_epoch):
+        loss_epoch = 0
+        step = 0
         for step, (data, label) in enumerate(dataloader):
             out = model(data)
             out = out.view(-1, out.size(-1))
@@ -13,12 +15,13 @@ def pre_train(model, dataloader, criterion, optimizer,
             optimizer.zero_grad()
             loss.backward()
             optimizer.step()
-
-            print(loss.item())
+            loss_epoch += loss.item()
 
             # TODO using visdom to visualize the loss curve.
             if vis is not None:
                 pass
+
+        print("Epoch {0} \ Loss {1}".format(epoch, loss_epoch/step))
 
 
 def sample_data(model, save_path='./real_data.txt',

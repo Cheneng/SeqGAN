@@ -42,7 +42,7 @@ class ClassDataset(Dataset):
         return data
 
     def __getitem__(self, index):
-        return torch.Tensor(self.data[index]).long(), torch.Tensor(self.target[index]).long()
+        return torch.Tensor(self.data[index]).long(), torch.Tensor([self.target[index]]).long()
 
     def __len__(self):
         return len(self.data)
@@ -50,7 +50,10 @@ class ClassDataset(Dataset):
 
 if __name__ == '__main__':
     from torch.utils.data import DataLoader
-    data = SequenceDataset('./real_data.txt')
-    trainloader = DataLoader(dataset=data, batch_size=32, shuffle=True)
-    for data, label in trainloader:
-        print(label)
+    data = ClassDataset('./real_data.txt', './fake_data.txt')
+    trainloader = DataLoader(dataset=data, batch_size=2, shuffle=False)
+
+    for index, (x, y) in enumerate(trainloader):
+        print(index)
+        print(x)
+

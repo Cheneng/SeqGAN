@@ -35,6 +35,7 @@ class Discriminator(nn.Module):
         for param in self.parameters():
             param.data.uniform_(-0.05, 0.05)
 
+
 if __name__ == '__main__':
     from config import D_Config
     config = D_Config()

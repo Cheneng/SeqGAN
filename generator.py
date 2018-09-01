@@ -26,7 +26,7 @@ class Generator(nn.Module):
         :return: the output of the sequence.
         """
         x = self.embed(x)
-        x, _ = self.lstm(x, hidden)
+        x, hidden = self.lstm(x, hidden)
         x = self.softmax_out(x)
         return x
 
@@ -45,7 +45,7 @@ class Generator(nn.Module):
 
     def sample(self, batch_size, seq_len):
         """
-            Sample some data from the model.
+            Sample some data from the model from the beginning.
         :param batch_size: the batch of the sample data.
         :param seq_len: the sequence length of the sample data.
         :return: (torch.LongTensor) the sample data indexes whose first input index is 0.
@@ -54,19 +54,48 @@ class Generator(nn.Module):
         x = torch.zeros((batch_size, 1)).long()
         if torch.cuda.is_available() is True:
             x = x.cuda()
-
         hidden = self.init_hidden(batch_size)
+
         for _ in range(seq_len):
             x, hidden = self.step_forward_sample(x, hidden)
             output.append(x)
         output = torch.cat(output, dim=1)
         return output
 
+    def partial_sample(self, seq_len, partial_data):
+        batch_size = partial_data.size(0)
+        given_len = partial_data.size(1)
+
+        # not need to generate
+        if given_len == seq_len:
+            return partial_data
+
+        # if actually not the partial sample ...
+        if given_len == 0:
+            return sample_data(batch_size=batch_size, seq_len=seq_len)
+
+        first_input = torch.zeros((batch_size, 1)).long()
+        input = torch.cat([first_input, partial_data], dim=1)
+        hidden = self.init_hidden(batch_size)
+        # encode to get the hidden
+        input = self.embed(input)
+        out, hidden = self.lstm(input, hidden)
+        x = F.softmax(out[:, -1, :], dim=1)
+        x = x.multinomial(1)     # as the next step input
+
+        out_list = []
+        for i in range(seq_len - given_len):
+            out_list.append(x)
+            x, hidden = self.step_forward_sample(x, hidden)
+        out = torch.cat(out_list, dim=1)
+        out = torch.cat([partial_data, out], dim=1)
+        return out
+
     def init_hidden(self, batch_size):
         h = torch.zeros((1, batch_size, self.hidden_size))
         c = torch.zeros((1, batch_size, self.hidden_size))
-        if torch.cuda.is_available():
-            h, c = h.cuda(), c.cuda()
+        # if torch.cuda.is_available():
+        #     h, c = h.cuda(), c.cuda()
         return h, c
 
     def init_param(self, a=0, b=1):
