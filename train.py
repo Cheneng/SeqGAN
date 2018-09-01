@@ -2,12 +2,15 @@ import torch
 import torch.nn as nn
 
 
-def train(model, dataloader, criterion, optimizer,
-          training_epoch=20, vis=None):
+def train(model, dataloader, criterion, optimizer, opt,
+          training_epoch=20, vis=None, name='None'):
     for epoch in range(training_epoch):
         loss_epoch = 0
         step = 0
-        for step, (data, label) in enumerate(dataloader):
+        for step, (data, label) in enumerate(dataloader, 1):
+            if opt.cuda is not None:
+                data = data.cuda()
+                label = label.cuda()
             out = model(data)
             out = out.view(-1, out.size(-1))
             label = label.view(-1)
@@ -17,11 +20,25 @@ def train(model, dataloader, criterion, optimizer,
             optimizer.step()
             loss_epoch += loss.item()
 
-            # TODO using visdom to visualize the loss curve.
-            if vis is not None:
-                pass
+        if vis is not None:
+            vis.update(loss_epoch/step)
 
-        print("Epoch {0} \ Loss {1}".format(epoch, loss_epoch/step))
+        print("{0} Epoch {1} \ Loss {2}".format(name, epoch, loss_epoch/step))
+
+
+def get_loss(model, dataloader, criterion, vis=None):
+    loss_epoch = 0
+    step = 0
+    for step, (data, label) in enumerate(dataloader, 1):
+        out = model(data)
+        out = out.view(-1, out.size(-1))
+        label = label.view(-1)
+        loss = criterion(out, label)
+        loss_epoch += loss.item()
+
+    if vis is not None:
+        vis.update(loss_epoch/step)
+    return loss_epoch
 
 
 def sample_data(model, save_path='./real_data.txt',

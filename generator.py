@@ -94,8 +94,8 @@ class Generator(nn.Module):
     def init_hidden(self, batch_size):
         h = torch.zeros((1, batch_size, self.hidden_size))
         c = torch.zeros((1, batch_size, self.hidden_size))
-        # if torch.cuda.is_available():
-        #     h, c = h.cuda(), c.cuda()
+        if torch.cuda.is_available():
+            h, c = h.cuda(), c.cuda()
         return h, c
 
     def init_param(self, a=0, b=1):
