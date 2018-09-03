@@ -29,10 +29,8 @@ class Rollout(object):
             for j in range(1, seq_len+1):
                 temp_data = self.rolling_model.partial_sample(seq_len, data[:, :j])
                 pred_reward = discriminator(temp_data) # tensor
-                print(pred_reward)
                 pred_reward = F.softmax(pred_reward, 1)
 
-                print(pred_reward)
                 # If the first time to get the reward.
                 if i == 0:
                     reward.append(pred_reward[:, 1].unsqueeze(1))

@@ -27,6 +27,7 @@ class Generator(nn.Module):
         :return: the output of the sequence.
         """
         x = self.embed(x)
+        self.lstm.flatten_parameters()
         x, hidden = self.lstm(x, hidden)
         x = self.linear_out(x)
         x = self.softmax_out(x)
@@ -82,12 +83,16 @@ class Generator(nn.Module):
         first_input = torch.zeros((batch_size, 1)).long()
         if self.use_cuda:
             first_input = first_input.cuda()
-        input = torch.cat([first_input, partial_data], dim=1)
+        input_ = torch.cat([first_input, partial_data], dim=1)
+        input_ = input_.contiguous()
 
         hidden = self.init_hidden(batch_size)
+        hidden = hidden
         # encode to get the hidden
-        input = self.embed(input)
-        out, hidden = self.lstm(input, hidden)
+        input_ = self.embed(input_)
+        # input = input.contiguous()
+        # self.lstm.flatten_parameters()
+        out, hidden = self.lstm(input_, hidden)
         out = self.linear_out(out)
         x = F.softmax(out[:, -1, :], dim=1)
         x = x.multinomial(1)     # as the next step input

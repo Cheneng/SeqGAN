@@ -23,7 +23,7 @@ def train(model, dataloader, criterion, optimizer, opt,
         if vis is not None:
             vis.update(loss_epoch/step)
 
-        print("{0} Epoch {1} \ Loss {2}".format(name, epoch, loss_epoch/step))
+        print("{0} Loss {1}".format(name, loss_epoch/step))
 
 
 def get_loss(model, dataloader, criterion, vis=None):

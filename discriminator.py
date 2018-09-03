@@ -31,9 +31,9 @@ class Discriminator(nn.Module):
         x = [F.max_pool1d(data, data.size(2)).squeeze(2) for data in x]
         x = torch.cat(x, dim=-1)
 
-        temp = self.linear_1(x)
-        gate = F.sigmoid(temp)
-        x = gate * F.relu(temp) + (1.0 - gate) * x
+        # temp = self.linear_1(x)
+        # gate = F.sigmoid(temp)
+        # x = gate * F.relu(temp) + (1.0 - gate) * x
 
         x = self.dropout(x)
         x = self.linear_out(x)

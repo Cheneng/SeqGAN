@@ -105,7 +105,6 @@ def main():
 
     # Adversarial Training
     print("\nAdversarial Training...")
-    # gen_gan_criterion = nn.NLLLoss(size_average=False)  # not to do the sum and average the loss
     gen_gan_criterion = nn.NLLLoss()
     dis_gan_criterion = nn.CrossEntropyLoss(size_average=False)
 
@@ -123,7 +122,6 @@ def main():
             some_data = my_model.sample(g_config.batch_size, g_config.seq_len)
             reward = rollout.get_reward(some_data, g_config.num_rollout, discriminator=discriminator)
             reward = reward.detach()   # don't need to compute the gradient of the reward.
-            # reward = (reward - 0.4) * 10
 
             # draw the reward line
             vis_reward.update(torch.sum(reward).item() / (g_config.batch_size * g_config.seq_len))
@@ -133,14 +131,11 @@ def main():
             if opt.cuda is not None:
                 init_zero_input = init_zero_input.cuda()
             input_data = torch.cat([init_zero_input, some_data[:, :-1].contiguous()], dim=1)
-            output_rate = my_model.forward(input_data)
-
+            output_rate = my_model(input_data)
             policy_output_rate = (reward.unsqueeze(-1) * output_rate)
-
             loss = gen_gan_criterion(policy_output_rate.view(-1, policy_output_rate.size(-1)), some_data.view(-1))
 
-            print(loss.item())
-
+            # print(loss.item())
             gen_gan_optim.zero_grad()
             loss.backward()
             gen_gan_optim.step()

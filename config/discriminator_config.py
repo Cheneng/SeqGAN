@@ -9,5 +9,5 @@ class D_Config(object):
         self.dropout_rate = 0.75
         self.output_class = 2
         self.batch_size = 128
-        self.pretrain_epoch = 10
+        self.pretrain_epoch = 15
         self.ad_epoch = 4       # the training epoch in every adversarial training
