@@ -14,11 +14,12 @@ class Generator(nn.Module):
         self.hidden_size = config.hidden_size
         self.output_size = config.dict_size
         self.embed = nn.Embedding(config.dict_size, config.embed_dim)
-        # self.embed.weight.requires_grad = False     # not to change the embedding
+        self.embed.weight.requires_grad = False     # not to change the embedding
         self.lstm = nn.LSTM(self.input_size, self.hidden_size,
                             batch_first=config.batch_first)
         self.linear_out = nn.Linear(self.hidden_size, self.output_size)
-        self.softmax_out = nn.LogSoftmax(dim=1)
+        self.softmax_out = nn.LogSoftmax(dim=2)
+        self.use_cuda = True if config.cuda is not None else False
 
     def forward(self, x, hidden=None):
         """
@@ -27,6 +28,7 @@ class Generator(nn.Module):
         """
         x = self.embed(x)
         x, hidden = self.lstm(x, hidden)
+        x = self.linear_out(x)
         x = self.softmax_out(x)
         return x
 
@@ -37,8 +39,11 @@ class Generator(nn.Module):
         :param hidden: (torch.FloatTensor) The hidden input of the step.
         :return: (output max index, hidden)
         """
+        if self.use_cuda:
+            x = x.cuda()
         x = self.embed(x)
         x, hidden = self.lstm(x, hidden)
+        x = self.linear_out(x)
         x = F.softmax(x, dim=2).squeeze(1)
         x = x.multinomial(1)
         return x, hidden
@@ -52,7 +57,7 @@ class Generator(nn.Module):
         """
         output = []
         x = torch.zeros((batch_size, 1)).long()
-        if torch.cuda.is_available() is True:
+        if self.use_cuda:
             x = x.cuda()
         hidden = self.init_hidden(batch_size)
 
@@ -75,11 +80,15 @@ class Generator(nn.Module):
             return sample_data(batch_size=batch_size, seq_len=seq_len)
 
         first_input = torch.zeros((batch_size, 1)).long()
+        if self.use_cuda:
+            first_input = first_input.cuda()
         input = torch.cat([first_input, partial_data], dim=1)
+
         hidden = self.init_hidden(batch_size)
         # encode to get the hidden
         input = self.embed(input)
         out, hidden = self.lstm(input, hidden)
+        out = self.linear_out(out)
         x = F.softmax(out[:, -1, :], dim=1)
         x = x.multinomial(1)     # as the next step input
 
@@ -94,7 +103,7 @@ class Generator(nn.Module):
     def init_hidden(self, batch_size):
         h = torch.zeros((1, batch_size, self.hidden_size))
         c = torch.zeros((1, batch_size, self.hidden_size))
-        if torch.cuda.is_available():
+        if self.use_cuda:
             h, c = h.cuda(), c.cuda()
         return h, c
 
@@ -116,3 +125,7 @@ if __name__ == '__main__':
     model.init_param()
     out = model.sample(batch_size=20, seq_len=10)
     sample_data(model)
+    print(out)
+    pred = model.forward(out)
+    print(pred.size())
+

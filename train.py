@@ -30,6 +30,9 @@ def get_loss(model, dataloader, criterion, vis=None):
     loss_epoch = 0
     step = 0
     for step, (data, label) in enumerate(dataloader, 1):
+        if model.use_cuda:
+            data = data.cuda()
+            label = label.cuda()
         out = model(data)
         out = out.view(-1, out.size(-1))
         label = label.view(-1)
@@ -48,7 +51,6 @@ def sample_data(model, save_path='./real_data.txt',
             out = model.sample(batch_size, seq_len).tolist()
             for sample in out:
                 f.write("%s\n" % ' '.join(map(str, sample)))
-
 
 
 

@@ -28,23 +28,25 @@ class Rollout(object):
         for i in range(num):
             for j in range(1, seq_len+1):
                 temp_data = self.rolling_model.partial_sample(seq_len, data[:, :j])
-                pred_reward = F.softmax(discriminator(temp_data), dim=1)  # tensor
+                pred_reward = discriminator(temp_data) # tensor
+                print(pred_reward)
+                pred_reward = F.softmax(pred_reward, 1)
+
+                print(pred_reward)
                 # If the first time to get the reward.
                 if i == 0:
                     reward.append(pred_reward[:, 1].unsqueeze(1))
                 else:
                     reward[j-1] += pred_reward[:, 1].unsqueeze(1)
-        # the judge the whole sequence
-        # whole_reward = F.softmax(discriminator(data), dim=1)
         reward = torch.cat(reward, dim=1) / num     # [ batch_size, seq_len ]
-        # reward = torch.cat([reward, whole_reward], dim=1) # add the last whole reward
         return reward
 
     def update_param(self):
         """
         update the parameter with the the update_rate percent origin model.
         """
-        for (name1, param1), (name2, param2) in zip(self.ori_model.parameter(), self.rolling_model):
+        for (name1, param1), (name2, param2) in \
+                zip(self.ori_model.named_parameters(), self.rolling_model.named_parameters()):
             if name1 != name2:
                 raise ValueError("The models parameter has been change")
             param1.data = self.update_rate * param1.data + (1 - self.update_rate) * param2.data
