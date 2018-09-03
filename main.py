@@ -13,8 +13,8 @@ import argparse
 import visdom
 
 parser = argparse.ArgumentParser(description="Training Configuration")
-parser.add_argument("--cuda", default=None, type=int)
-parser.add_argument("--rand_seed", default=1, type=int)
+parser.add_argument("--cuda", default=None, type=int, help="Set the cuda number")
+parser.add_argument("--rand_seed", default=1, type=int, help="Set the random seed number")
 opt = parser.parse_args()
 print(opt)
 
