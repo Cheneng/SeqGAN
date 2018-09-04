@@ -1,7 +1,7 @@
 # SeqGAN
 
 > This is basic demo of the **SEQUENCE GAN** 
-which is rewrite using PyTorch for personal study.   
+implemented by PyTorch for personal study.   
 The original versioin of the tenensorflow is in [here](https://github.com/LantaoYu/SeqGAN)
 
 # Requirements
